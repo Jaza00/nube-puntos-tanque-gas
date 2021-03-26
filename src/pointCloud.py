@@ -23,7 +23,7 @@ def xyz2image(xyz):
     scalars = -xyz[:, 2] / 2.5
     image = scalars.reshape(-1, 640, )
     image = image.astype(np.uint8)
-    cv2.imwrite('2d.png', image)
+    cv2.imwrite('xyz2image.png', image)
     return image
 
 def maskFromImage(image, radio):

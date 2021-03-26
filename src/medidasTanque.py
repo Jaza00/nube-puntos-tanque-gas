@@ -5,7 +5,8 @@ from vedo import *
 import numpy as np
 import cv2
 
-vertices = load('Gas Tank Straight Down.ply')
+vertices = load('nubePuntos/GasTankStraightDown.ply')
+
 colorPoint = 'magma'
 
 xyz = vertices.points()
