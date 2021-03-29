@@ -3,6 +3,27 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 
+
+def loadPointCloud(path):
+    pointCloud = load(path)
+    return pointCloud
+
+def showPointCloud(pointClouds, depth, colorPoint, rPoint, bg=None,):
+    plt = Plotter(shape=(1,len(pointClouds)))
+    i = 0
+    for pointCloud in pointClouds:
+        xyz = pointCloud.points()
+        xyz = xyz[xyz[:,2] < depth]
+        pointCloud = Points(xyz, r=rPoint)
+        scalars = pointCloud.points()[:, 2]
+        pointCloud.pointColors(-scalars, cmap=colorPoint)
+        if bg is not None:
+            plt.show(pointCloud, at=i, bg=bg, viewup='z')
+        else:
+            plt.show(pointCloud, at=i, bg='white', viewup='z')
+        i = i + 1
+    plt.show(interactive=True)
+
 def knNeighbors(vertices, nNeighbors):
     """ 
     knNeighbors: disminuye el ruido y agrupo los puntos con sus vecionos más cercanos
@@ -43,6 +64,7 @@ def maskFromImage(image, radio):
     return mask.flatten(), thresh, (x, y, r)
 
 def getFalseColorImage( grayImage, nameColor):
+    newImage = None
     print('color: ', nameColor)
     if nameColor == 'rainbow':
         newImage = cv2.applyColorMap(grayImage, cv2.COLORMAP_RAINBOW)
@@ -52,9 +74,6 @@ def getFalseColorImage( grayImage, nameColor):
         newImage = cv2.applyColorMap(grayImage, cv2.COLORMAP_HSV)
     if nameColor == 'magma':
         newImage = cv2.applyColorMap(grayImage, cv2.COLORMAP_MAGMA)
-    if nameColor == 'rainbow-inv':
-        newImage = cv2.applyColorMap(grayImage, cv2.COLORMAP_RAINBOW)
-        newImage = abs(255 - newImage)
     if nameColor == 'winter':
         newImage = cv2.applyColorMap(grayImage, cv2.COLORMAP_WINTER)
     if nameColor == 'summer':
@@ -77,12 +96,30 @@ def getFalseColorImage( grayImage, nameColor):
         newImage = cv2.cvtColor(grayImage, cv2.COLOR_GRAY2RGB)
     return newImage
 
-def xyz2pointCloud(xyz, colorPoint, radio):
-    vertices = Points(xyz, r=radio)
-    # agrega el falso color jet
+def xyz2pointCloud(xyz):
+    vertices = Points(xyz)
     scalars = vertices.points()[:, 2]
-    vertices.pointColors(-scalars, cmap=colorPoint)
     return vertices, scalars
+
+def savePointCloud(pointCloud, path):
+    write(pointCloud,path)
+    print('point cloud saved')
+
+def getCoordPuntoMin(xyz):
+    # obtenemos el índice del mínimo punto de la nube
+    indexPuntoMin = np.where(xyz[:,2] == np.min(xyz[:,2]))[0]
+    # obtenemos las coordenadas del mínimo punto
+    xyz[indexPuntoMin].tolist()
+    coordPuntoMin = tuple(xyz[indexPuntoMin].tolist()[0])
+    return coordPuntoMin
+
+def getCoordPuntoMax(xyz):
+    # obtenemos el índice del máximo punto de la nube
+    indexPuntoMax = np.where(xyz[:,2] == np.max(xyz[:,2]))[0]
+    # obtenemos las coordenadas del máximo punto
+    xyz[indexPuntoMax].tolist()
+    coordPuntoMax = tuple(xyz[indexPuntoMax].tolist()[0])
+    return coordPuntoMax
 
 def toMesh(coords):
     print("point cloud to mesh")
