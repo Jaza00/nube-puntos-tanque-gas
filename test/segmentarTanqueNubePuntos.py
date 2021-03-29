@@ -17,13 +17,13 @@ mask, tresh, (centroX, centroY, radio) = maskFromImage(image, 5)
 xyzFondo = xyz[mask]
 
 # transformamos las coordenadas xyz a nube de puntos
-pointCloudFondo, _ = xyz2pointCloud(xyzFondo)
+pointCloudFondo = xyz2pointCloud(xyzFondo)
 
 # aplicamos la máscara sobre la nube de puntos 3D
 xyzTanque = xyz[mask == False]
 
 # transformamos las coordenadas xyz a nube de puntos
-pointCloudTanque, _ = xyz2pointCloud(xyzTanque)
+pointCloudTanque = xyz2pointCloud(xyzTanque)
 
 # guardamos nube de puntos del tanque de gas
 savePointCloud(pointCloudTanque, 'nubePuntosTanque.ply')

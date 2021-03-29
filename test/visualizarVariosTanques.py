@@ -41,10 +41,10 @@ xyz = np.insert(xyz, xyz.shape[0], xyz4, 0)
 xyz = np.insert(xyz, xyz.shape[0], xyz5, 0)
 
 # transformas las coordenadas a nube de puntos
-pointCloud1, _ = xyz2pointCloud(xyz)
+pointCloud = xyz2pointCloud(xyz)
 
 
-showPointCloud([pointCloud1], 5000, 'turbo', 1.0, bg='k')
+showPointCloud([pointCloud], 5000, 'turbo', 1.0, bg='k')
 
 
 

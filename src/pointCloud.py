@@ -1,14 +1,46 @@
 from vedo import *
-import matplotlib.pyplot as plt 
 import numpy as np
 import cv2
 
 
 def loadPointCloud(path):
+    """
+    Carga una nube de puntos con extensión .ply, obt, etc.
+
+    parameters: 
+        path: string
+            ruta del directorio donde se encuentra la nube de puntos
+
+    return:
+        pointCloud: nube de puntos de vedo
+            nube de puntos con las propiedades de la librería vedo
+    """
+
     pointCloud = load(path)
     return pointCloud
 
 def showPointCloud(pointClouds, depth, colorPoint, rPoint, bg=None,):
+    """
+    Visualizar una nube de puntos
+
+    parameters: 
+        pointClouds: list
+            lista de todas las nubes de puntos que se quiere visualizar
+
+        depth: int
+            máxima profundidad (eje z) permitido en la nube de puntos
+        
+        colorPoint: string
+            nombre del falso color que se asignará a la nube de puntos
+            posibles colores: viridis, magma, hot, winter, hsv, inferno, plasma, turbo, etc
+        
+        rPoint: int
+            tamaño de los puntos de la nube de puntos
+
+        bg: string
+            color del fondo del espacio de visualización, por defecto es 'white'
+    """
+
     plt = Plotter(shape=(1,len(pointClouds)))
     i = 0
     for pointCloud in pointClouds:
@@ -26,28 +58,94 @@ def showPointCloud(pointClouds, depth, colorPoint, rPoint, bg=None,):
 
 def knNeighbors(vertices, nNeighbors):
     """ 
-    knNeighbors: disminuye el ruido y agrupo los puntos con sus vecionos más cercanos
-    parameters: vertices y el número de vecinos a tener en cuenta
-    return: nueva nube de puntos
+    Disminuye el ruido y agrupo los puntos con sus vecinos más cercanos
+
+    parameters: 
+        vertices: np.array
+            array de las coordenadas de la nube de puntos
+        
+        nNeighbors: int
+            número de vecinos a tener en cuenta en el filtro
+
+    return:
+        newPointCloud: np.array
+            nueva nube de puntos
     """
+
     vertices = Points(vertices)
     newPointCloud = []
+    
     for i in range(vertices.N()):
         pt = vertices.points()[i]
         ids = vertices.closestPoint(pt, N = nNeighbors, returnPointId=True)
         newPointCloud.append(
             np.mean(vertices.points()[ids], axis=0).tolist())
     newPointCloud = np.array(newPointCloud)
+
     return newPointCloud
 
 def xyz2image(xyz):
+    """
+    transforma una nube de puntos a una imagen 2D
+
+    parameters:
+        xyz: np.array
+        array de las coordenadas de los puntos de la nube de puntos
+
+    return:
+        image: np.array uint8
+        imagen resultante de la nube de puntos
+    """
+
     scalars = -xyz[:, 2] / 2.5
     image = scalars.reshape(-1, 640, )
     image = image.astype(np.uint8)
     cv2.imwrite('xyz2image.png', image)
     return image
 
+def detectarCircunferencia(image):
+    """
+    Detecta una circunferencia en una imagen en escala de grises
+
+    parameters:
+        image: np.array
+            imagen en escala de grises en la que se quiere detectar un círculo
+
+    return:
+        circulos: lista de tuplas
+            lista en la que retorna todos los centros y radios de los círculos detectados
+    """
+
+    circulos = []
+    circles = cv2.HoughCircles(image, cv2.HOUGH_GRADIENT, 1.2, 90)
+    if circles is not None:
+        circles = np.round(circles[0, :]).astype("int")
+        for (centroX, centroY, radio) in circles:
+            circulos.append((centroX, centroY, radio))
+    return circulos
+
 def maskFromImage(image, radio):
+    """
+    Encuentra la máscara de la imagen que corresponde a la circunferencia del tanque de gas
+
+    parameters:
+        image: np.array
+            imagen en escala de grises
+
+        radio: int
+            radio adicional al radio de la circunferencia para conservar datos cercanos al tanque
+
+    return:
+        mask: np.array
+            array de tamaño ancho*alto que corresponde a la máscara resultante 
+
+        thresh: np.array
+            array, imagen que visualiza la segmentación del tanque
+
+        (x, y, r): tuple
+            tupla que contiene el centro y radio de la circunferencia detectada
+    """
+
     mask = None
     thresh = None
     imgCopy = image.copy()
@@ -64,6 +162,22 @@ def maskFromImage(image, radio):
     return mask.flatten(), thresh, (x, y, r)
 
 def getFalseColorImage( grayImage, nameColor):
+    """
+    Aplicar un falso color a una imagen en escala de grises
+
+    parameters: 
+        grayImage: np.array
+            imagen en escala de grises
+
+        nameColor: string
+            nombre del falso color que se asignará a la nube de puntos
+            posibles colores: viridis, magma, hot, winter, hsv, inferno, plasma, turbo, etc
+
+    returns:
+        newImage: np.array
+            imagen con el falso color aplicado
+    """
+
     newImage = None
     print('color: ', nameColor)
     if nameColor == 'rainbow':
@@ -97,15 +211,49 @@ def getFalseColorImage( grayImage, nameColor):
     return newImage
 
 def xyz2pointCloud(xyz):
-    vertices = Points(xyz)
-    scalars = vertices.points()[:, 2]
-    return vertices, scalars
+    """
+    Transforma coordenadas xyz a una nube de puntos de vedo
+
+    parameters:
+        xyz: np.array
+            array de las coordenadas de la nube de puntos
+
+    return:
+        pointCloud: pointCloud de vedo
+            nube de puntos con las propiedades de la librería vedo
+    """
+
+    pointCloud = Points(xyz)
+    return pointCloud
 
 def savePointCloud(pointCloud, path):
+    """
+    Guardar nube de puntos en el equipo
+
+    paramters:
+        pointCloud: point cloud de vedo
+            nube de puntos de la librería vedo
+        
+        path: string
+            ruta en donde se quiere guardar la nube de puntos, el nombre debe tener extensión .ply
+    """
+
     write(pointCloud,path)
     print('point cloud saved')
 
 def getCoordPuntoMin(xyz):
+    """
+    Obtener la coordenada en donde se encuentra el mínimo valor de profundidad
+
+    paramters:
+        xyz: np.array
+            array de las coordenadas de la nube de puntos
+    
+    return:
+        coordPuntoMin: tuple
+            tupla de la coordenada xyz del mínimo valor de profundidad
+    """
+
     # obtenemos el índice del mínimo punto de la nube
     indexPuntoMin = np.where(xyz[:,2] == np.min(xyz[:,2]))[0]
     # obtenemos las coordenadas del mínimo punto
@@ -114,6 +262,18 @@ def getCoordPuntoMin(xyz):
     return coordPuntoMin
 
 def getCoordPuntoMax(xyz):
+    """
+    Obtener la coordenada en donde se encuentra el máximo valor de profundidad
+
+    paramters:
+        xyz: np.array
+            array de las coordenadas de la nube de puntos
+    
+    return:
+        coordPuntoMax: tuple
+            tupla de la coordenada xyz del máximo valor de profundidad
+    """  
+
     # obtenemos el índice del máximo punto de la nube
     indexPuntoMax = np.where(xyz[:,2] == np.max(xyz[:,2]))[0]
     # obtenemos las coordenadas del máximo punto

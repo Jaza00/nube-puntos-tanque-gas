@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="src\images\imagenIntecol.PNG"><img>
+    <img src="public\images\imagenIntecol.png"><img>
 </div>
 
 <h1 align="center">Nube de puntos de tanque de gas con vedo python</h1>
